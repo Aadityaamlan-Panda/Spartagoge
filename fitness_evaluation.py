@@ -7,8 +7,6 @@ references = {
     'calories_burned': "3. Mayo Clinic. \"Calories Burned in Exercise.\" [Mayo Clinic Link](https://www.mayoclinic.org).",
     'distance_traveled': "4. American College of Sports Medicine (ACSM). \"Distance Running and Health.\" [ACSM Link](https://www.acsm.org).",
     'move_minutes': "5. Centers for Disease Control and Prevention. \"Move Minutes and Physical Activity Recommendations.\" [CDC Link](https://www.cdc.gov).",
-    'daily_goals': "6. Google Fit API Documentation. \"Daily Goals and Fitness Tracking.\" [Google Fit Link](https://developers.google.com/fit).",
-    'weekly_target': "7. World Health Organization (WHO). \"Weekly Physical Activity Recommendations.\" [WHO Link](https://www.who.int).",
     'weight': "8. World Health Organization (WHO). \"Body Weight and Health Recommendations.\" [WHO Link](https://www.who.int).",
     'energy_expended': "9. National Institutes of Health (NIH). \"Energy Expenditure and Metabolism.\" [NIH Link](https://www.nih.gov).",
     'average_heart_rate': "10. American Heart Association. \"Target Heart Rates.\" [AHA Link](https://www.heart.org).",
@@ -32,9 +30,6 @@ def evaluate_fitness(fitness_data):
         'steps': fitness_data.get('steps', 0),
         'calories_burned': fitness_data.get('calories_burned', 0),
         'distance_traveled': fitness_data.get('distance_traveled', 0),
-        'move_minutes': fitness_data.get('move_minutes', 0),
-        'daily_goals': fitness_data.get('daily_goals', 0),
-        'weekly_target': fitness_data.get('weekly_target', 0),
         'weight': fitness_data.get('weight', 0),
         'energy_expended': fitness_data.get('energy_expended', 0),
         'vigorous_activity_minutes': fitness_data.get('vigorous_activity_minutes', 0),
@@ -49,7 +44,7 @@ def evaluate_fitness(fitness_data):
     # Define thresholds and corresponding messages
     thresholds = {
         'heart_points': {
-            'threshold': 150,
+            'threshold': 21.42,
             'low_message': "Heart Points below the recommended target; aim for 150 points per week.",
             'high_message': "Good achievement of Heart Points, supports cardiovascular health."
         },
@@ -68,21 +63,6 @@ def evaluate_fitness(fitness_data):
             'low_message': "Low running distance; may not be suitable for endurance sports.",
             'high_message': "Good running distance; supports endurance capabilities."
         },
-        'move_minutes': {
-            'threshold': 150,
-            'low_message': "Insufficient movement throughout the day.",
-            'high_message': "Good daily movement, supports overall health."
-        },
-        'daily_goals': {
-            'threshold': 5,
-            'low_message': "Not meeting daily goals consistently; aim to achieve at least 5 days a week.",
-            'high_message': "Consistently achieving daily goals; excellent for maintaining fitness."
-        },
-        'weekly_target': {
-            'threshold': 150,
-            'low_message': "Weekly target points below the recommended level.",
-            'high_message': "Meeting weekly target points; on track for good fitness."
-        },
         'weight': {
             'threshold': 90,  
             'high_message': "Weight is within a healthy range for athletic performance.",
@@ -99,7 +79,7 @@ def evaluate_fitness(fitness_data):
             'high_message': "Good amount of vigorous activity, supports overall fitness."
         },
         'average_heart_rate': {
-            'threshold': 100,  # Example threshold for average heart rate (can vary by individual)
+            'threshold': 100, 
             'low_message': "Average heart rate is above the healthy range; consider monitoring your intensity.",
             'high_message': "Average heart rate is within a healthy range; supports cardiovascular fitness."
         },
@@ -118,6 +98,18 @@ def evaluate_fitness(fitness_data):
                 verdicts.append(values['low_message'])
             else:
                 positive_traits.append(values['high_message'])
+        elif metric =='average_heart_rate':
+            # Invert logic for weight
+            if metrics[metric] > values['threshold']:
+                verdicts.append(values['low_message'])
+            else:
+                positive_traits.append(values['high_message'])
+        elif metric == 'body_fat_percentage':
+            # Invert logic for weight
+            if metrics[metric] > values['threshold']:
+                verdicts.append(values['low_message'])
+            else:
+                positive_traits.append(values['high_message'])
         else:
             if metrics[metric] < values['threshold']:
                 verdicts.append(values['low_message'])
@@ -127,16 +119,17 @@ def evaluate_fitness(fitness_data):
     # Final verdict based on accumulated verdicts and positive traits
     final_verdict = []
 
+    if positive_traits:
+        final_verdict.append("\n\nPOSITIVE ASPECTS:\n\n" + "\n".join(positive_traits))
+    else:
+        final_verdict.append("\n\nPOSITIVE ASPECTS:\n\nKeep trying and stay active; every step counts toward improving your fitness!")
     if not verdicts:
-        final_verdict.append("Suitable for a variety of sports based on current fitness level.")
+        final_verdict.append("\n\nSuitable for a variety of sports based on current fitness level.")
     else:
         final_verdict.append("\n\nRECOMMENDATIONS:\n\n" + "\n".join(verdicts))
 
     # Add positive feedback if any
-    if positive_traits:
-        final_verdict.append("\nPOSITIVE ASPECTS:\n\n" + "\n".join(positive_traits))
-    else:
-        final_verdict.append("\nPOSITIVE ASPECTS:\n\nKeep trying and stay active; every step counts toward improving your fitness!")
+    
 
     # Add references at the end of the report
     reference_section = "\n\nREFERENCES:\n\n" + "\n".join([f"{key.capitalize()}: {reference}" for key, reference in references.items()])

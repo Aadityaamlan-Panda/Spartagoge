@@ -1,3 +1,4 @@
+
 import pickle
 import os
 import time
@@ -8,6 +9,7 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from fitness_evaluation import evaluate_fitness  # Import the fitness evaluation function
+from firebase_config import initialize_firebase  # Import Firebase initialization
 
 # If modifying these SCOPES, delete the file token.pickle.
 SCOPES = [
@@ -21,6 +23,9 @@ class FitnessApp:
     def __init__(self, master):
         self.master = master
         master.title("Fitness Data Evaluation")
+
+        # Initialize Firebase
+        self.db = initialize_firebase()
 
         # Create buttons for actions
         self.get_data_button = tk.Button(master, text="Get Google Fit Data", command=self.get_google_fit_data)
@@ -130,9 +135,13 @@ class FitnessApp:
         except ValueError:
             messagebox.showerror("Error", "Please enter valid numeric values for all metrics.")
             return
-        
+        # Add timestamp for plotting later
+        fitness_data['timestamp'] = time.time() 
         # Evaluate fitness data and add verdict
         fitness_data['verdict'] = evaluate_fitness(fitness_data)
+
+        # Store the fitness data in Firestore
+        self.store_fitness_data(fitness_data)
 
         # Display results
         self.display_results(fitness_data)
@@ -140,6 +149,19 @@ class FitnessApp:
     def display_results(self, fitness_data):
         results = "\n".join(f"{key.capitalize()}: {value}" for key, value in fitness_data.items())
         messagebox.showinfo("Fitness Data", results)
+
+        
+    # Store fitness data in Firebase Firestore
+    def store_fitness_data(self, fitness_data):
+        # Firestore document reference (You can use a user's ID or timestamp as the document name)
+        doc_ref = self.db.collection('fitness_data').document(str(time.time()))
+
+        # Store the fitness data
+        try:
+            doc_ref.set(fitness_data)
+            print("Fitness data successfully saved to Firestore.")
+        except Exception as e:
+            print(f"Error storing fitness data: {e}")
 
 if __name__ == "__main__":
     root = tk.Tk()
